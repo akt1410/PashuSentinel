@@ -1,0 +1,32 @@
+﻿# --- API Layer ----------------------------------------------------------------
+fastapi
+uvicorn[standard]
+pydantic
+python-multipart
+
+# --- ML / Intelligence Engine (ref.md §10, §23) ------------------------------
+scikit-learn
+scipy
+numpy
+pandas
+
+# --- Database - PostgreSQL / PostGIS via SQLAlchemy --------------------------
+sqlalchemy>=2.0
+psycopg[binary]
+alembic
+geoalchemy2
+python-dotenv
+shapely
+
+# --- Auth (MVP) ---------------------------------------------------------------
+passlib[bcrypt]
+bcrypt==4.0.1
+python-jose[cryptography]
+
+# --- RAG - Veterinary Knowledge System (ref.md §14) --------------------------
+chromadb
+groq
+
+# --- Testing / Dev ------------------------------------------------------------
+httpx
+pytest

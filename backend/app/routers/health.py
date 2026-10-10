@@ -1,0 +1,74 @@
+"""
+app/routers/health.py — Health check & Syndromic definitions endpoints.
+
+PostgreSQL / Supabase edition.
+"""
+from __future__ import annotations
+
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import text
+from sqlalchemy.orm import Session
+
+from app.core.config import settings
+from app.db.session import get_db
+from app.services.ml_engine import SYNDROME_DEFINITIONS, get_ewma_model, get_if_model
+
+router = APIRouter(tags=["Health"])
+
+
+@router.get("/")
+@router.get("/health")
+def health():
+    if_model = get_if_model()
+    ewma_model = get_ewma_model()
+    return {
+        "status":  "ok",
+        "service": "pashu-sentinel-api",
+        "version": "2.0.0",
+        "database": "postgresql" if settings.is_postgres else "sqlite",
+        "ml_engine": {
+            "isolation_forest": if_model is not None and if_model._trained,
+            "ewma_farrington":  ewma_model is not None,
+        },
+    }
+
+
+@router.get("/health/db")
+def health_db(db: Session = Depends(get_db)):
+    """SELECT 1 liveness check + table count."""
+    try:
+        db.execute(text("SELECT 1"))
+        if settings.is_postgres:
+            tables = db.execute(
+                text("SELECT count(*) FROM pg_tables WHERE schemaname = 'public'")
+            ).scalar()
+            db_type = "postgresql"
+        else:
+            tables = db.execute(
+                text("SELECT count(*) FROM sqlite_master WHERE type='table'")
+            ).scalar()
+            db_type = "sqlite"
+        return {
+            "status":      "ok",
+            "database":    db_type,
+            "table_count": int(tables or 0),
+        }
+    except Exception as exc:
+        raise HTTPException(503, f"DB unreachable: {exc}")
+
+
+@router.get("/syndromes", tags=["Intelligence"])
+def get_syndromes():
+    """Return all 7 syndromic case definitions (ref.md §10.2)."""
+    return {
+        "total":     len(SYNDROME_DEFINITIONS),
+        "syndromes": [
+            {
+                "key":      key,
+                "label":    defn["label"],
+                "triggers": sorted(defn["triggers"]),
+                "diseases": defn["diseases"],
+            }
+            for key, defn in SYNDROME_DEFINITIONS.items()
+        ],
+    }
