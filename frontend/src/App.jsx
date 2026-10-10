@@ -45,7 +45,7 @@ function RoleHome() {
 // ─── App ──────────────────────────────────────────────────────────────────────
 function AppRoutes() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Routes>
         {/* Auth */}
         <Route path="/login" element={<LoginPage />} />

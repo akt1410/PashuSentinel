@@ -11,8 +11,12 @@ export default defineConfig(({ mode }) => {
   const apiUrlEscaped = apiUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   const apiUrlPattern = new RegExp(`^${apiUrlEscaped}/.*`, 'i')
 
+  const isGitHubPages = process.env.GITHUB_PAGES === 'true' || env.VITE_GITHUB_PAGES === 'true' || process.env.CI_PAGES === 'true'
+  const base = isGitHubPages ? '/PashuSentinel/' : (env.VITE_BASE_PATH || '/')
+
   return {
-  plugins: [
+    base,
+    plugins: [
     react(),
     VitePWA({
       strategies: 'generateSW',
