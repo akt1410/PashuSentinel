@@ -1,0 +1,83 @@
+# ==============================================================================
+# Pashu Sentinel — Production Docker Compose Orchestration
+# ==============================================================================
+# Usage:
+#   docker compose -f docker-compose.prod.yml up -d --build
+#   docker compose -f docker-compose.prod.yml logs -f
+#   docker compose -f docker-compose.prod.yml down
+# ==============================================================================
+
+services:
+  # ── Spatial Database: PostgreSQL 16 + PostGIS 3.4 ─────────────────────────
+  postgis:
+    image: postgis/postgis:16-3.4-alpine
+    container_name: pashu_prod_postgis
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       ${POSTGRES_DB:-pashu_sentinel}
+      POSTGRES_USER:     ${POSTGRES_USER:-pashu}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pashu_secure_password}
+    volumes:
+      - pashu_postgis_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-pashu} -d $${POSTGRES_DB:-pashu_sentinel}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pashu_net
+
+  # ── Backend: FastAPI + ML Intelligence Engine + RAG Vector Store ──────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pashu_prod_backend
+    restart: unless-stopped
+    depends_on:
+      postgis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-pashu}:${POSTGRES_PASSWORD:-pashu_secure_password}@postgis:5432/${POSTGRES_DB:-pashu_sentinel}
+      SECRET_KEY:   ${SECRET_KEY:-changeme_pashu_prod_secret_key_random_32_chars}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost,http://localhost:80,http://localhost:3000}
+    ports:
+      - "8000:8000"
+    volumes:
+      - pashu_chroma_data:/app/chroma_db
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks:
+      - pashu_net
+
+  # ── Frontend: React 19 PWA + Nginx Production Server ──────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+    container_name: pashu_prod_frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "80:80"
+    networks:
+      - pashu_net
+
+networks:
+  pashu_net:
+    driver: bridge
+
+volumes:
+  pashu_postgis_data:
+    driver: local
+  pashu_chroma_data:
+    driver: local
