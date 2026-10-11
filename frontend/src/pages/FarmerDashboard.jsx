@@ -159,7 +159,7 @@ export default function FarmerDashboard() {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <img src="/psentinel.png" alt="Pashu Sentinel" style={{ width: '2rem', height: '2rem', borderRadius: '0.5rem', objectFit: 'contain' }} />
+          <img src={`${import.meta.env.BASE_URL}psentinel.png`} alt="Pashu Sentinel" style={{ width: '2rem', height: '2rem', borderRadius: '0.5rem', objectFit: 'contain' }} />
           <div>
             <p style={{ fontSize: '0.75rem', fontWeight: 800, color: '#86efac', letterSpacing: '0.05em', margin: 0, fontFamily: "'Fraunces', serif" }}>PASHU SENTINEL</p>
             <p style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.4)', margin: 0 }}>Farmer Portal</p>

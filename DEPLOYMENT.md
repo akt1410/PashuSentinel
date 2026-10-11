@@ -1,155 +1,97 @@
 # Pashu Sentinel — Production Deployment Guide
 
-This guide provides end-to-end instructions for deploying Pashu Sentinel to production across both free-tier cloud platforms and dedicated container infrastructure.
+This guide details the two official deployment methods for Pashu Sentinel: the live zero-setup web application hosted on GitHub Pages, and the full-stack containerized deployment via Docker Compose.
 
 ---
 
-## Architecture Topology
+## 🌐 1. Live Web Application (GitHub Pages)
 
+The frontend PWA is live in production at:
+👉 **[https://akt1410.github.io/PashuSentinel/](https://akt1410.github.io/PashuSentinel/)**
+
+### Overview
+- **Zero-Setup Access**: Runs immediately in any desktop or mobile browser.
+- **Offline-First Resilience**: Powered by Workbox service workers and Dexie.js (IndexedDB). If a network connection is unavailable, field reports, triage simulations, and GIS maps function client-side.
+- **Automated CI/CD**: Every push to the `main` branch triggers `.github/workflows/deploy-pages.yml`, which runs unit checks, builds the production Vite bundle, and publishes updates to GitHub Pages automatically.
+- **Client Routing**: Configured with SPA redirect fallbacks (`404.html`) to ensure deep routes like `/farmer`, `/vet`, and `/dashboard` resolve cleanly without 404 errors.
+
+---
+
+## 🐳 2. Full-Stack Containerized Deployment (Docker Compose)
+
+For production deployments requiring the complete backend API, spatial database, and ML inference engine, Pashu Sentinel provides a production Docker Compose orchestration.
+
+### Architecture
 ```
                          +-----------------------------+
                          |      Client Browsers        |
-                         |    (Offline PWA / Mobile)   |
+                         |   (Mobile PWA / Offline)    |
                          +--------------+--------------+
-                                        | HTTPS
+                                        | HTTPS (Port 80)
                                         v
                          +-----------------------------+
-                         |       Frontend CDN          |
-                         |   (Vercel / Nginx Alpine)   |
+                         |   pashu_prod_frontend       |
+                         |  (Nginx Alpine + React PWA) |
                          +--------------+--------------+
-                                        | REST / JSON
+                                        | REST (Port 8000)
                                         v
                          +-----------------------------+
-                         |        FastAPI Core         |
-                         |   (Render / Docker / Uvicorn)|
+                         |   pashu_prod_backend        |
+                         |  (FastAPI + ML Intelligence)|
                          +------+---------------+------+
                                 |               |
-          SQL / GeoAlchemy      |               | Local ONNX / Groq API
+           Port 5432            |               | Local ONNX Embeddings
                                 v               v
             +----------------------+  +----------------------+
-            |   PostGIS Spatial    |  |   ChromaDB Vector    |
-            | (Supabase / Postgres)|  |   (Knowledge Store)  |
+            |   pashu_prod_postgis |  |   ChromaDB Vector    |
+            | (PostGIS 16-3.4)     |  |   (18 Protocol Docs) |
             +----------------------+  +----------------------+
 ```
 
----
+### Quick Start
 
-## Strategy A: Zero-Cost Cloud Deployment (Recommended)
-
-This setup runs entirely on production-grade free tiers with 99.9% uptime.
-
-### Step 1: Database (Supabase PostgreSQL + PostGIS)
-1. Create a free project at [supabase.com](https://supabase.com).
-2. In the Supabase SQL Editor, enable PostGIS:
-   ```sql
-   CREATE EXTENSION IF NOT EXISTS postgis;
-   ```
-3. Navigate to **Project Settings** > **Database** > **Connection string** > **URI**.
-4. Copy the connection URI:
-   ```
-   postgresql://postgres.[PROJECT_REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres
-   ```
-
-### Step 2: Backend API (Render / Railway)
-1. Create a **Web Service** on [render.com](https://render.com) or [railway.app](https://railway.app) connected to your GitHub repository.
-2. Configure service settings:
-   - **Root Directory**: `backend`
-   - **Runtime**: `Python 3`
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-3. Configure Environment Variables:
-   | Variable | Value / Example | Notes |
-   |---|---|---|
-   | `DATABASE_URL` | `postgresql+psycopg://postgres...` | Replace `postgresql://` with `postgresql+psycopg://` if needed |
-   | `SECRET_KEY` | *(Generate a 64-char random hex string)* | `python -c "import secrets; print(secrets.token_hex(32))"` |
-   | `GROQ_API_KEY` | `gsk_...` | Free API key from [console.groq.com](https://console.groq.com) |
-   | `CORS_ORIGINS` | `https://pashu-sentinel.vercel.app` | Comma-separated list of allowed frontend origins |
-4. Deploy service. On startup, Alembic migrations run automatically, tables are provisioned, demo villages are seeded, and the RAG vector store initializes.
-
-### Step 3: Frontend PWA (Vercel)
-1. Import the repository at [vercel.com](https://vercel.com).
-2. Configure project settings:
-   - **Framework Preset**: `Vite`
-   - **Root Directory**: `frontend`
-   - **Build Command**: `npm run build`
-   - **Output Directory**: `dist`
-3. Add Environment Variable:
-   - `VITE_API_URL`: URL of your deployed backend (e.g., `https://pashu-backend.onrender.com`).
-4. Click **Deploy**. Vercel will build the React 19 PWA, register the Workbox service worker, and publish the application with automatic edge SSL.
-
----
-
-## Strategy B: Single-Server Docker Compose Deployment
-
-Deploy the complete stack (PostGIS + FastAPI + Nginx PWA) on an Ubuntu/Debian VPS (AWS EC2, DigitalOcean Droplet, Hetzner, or GCP Compute Engine).
-
-### Prerequisites
-- Docker Engine 24.0+ and Docker Compose v2.20+
-- Inbound firewall access on ports 80, 443, and 8000 (optional for internal API)
-
-### Step 1: Clone & Configure
-```bash
-git clone https://github.com/akt1410/PashuSentinel.git
-cd PashuSentinel
-```
-
-Create `.env.prod`:
-```bash
-POSTGRES_DB=pashu_sentinel
-POSTGRES_USER=pashu
-POSTGRES_PASSWORD=pashu_strong_production_password_2026
-SECRET_KEY=9b7f92e0cbfae4210b37dc18d6a858e7c10b40a32e1858a8a47bfb3cb4ee08e6
-GROQ_API_KEY=gsk_your_groq_api_key_here
-CORS_ORIGINS=http://localhost,http://your-server-ip,https://pashusentinel.gov.in
-VITE_API_URL=http://localhost:8000
-```
-
-### Step 2: Build & Launch
-```bash
-docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
-```
-
-### Step 3: Verify Container Health
-```bash
-docker compose -f docker-compose.prod.yml ps
-```
-All 3 containers (`pashu_prod_postgis`, `pashu_prod_backend`, `pashu_prod_frontend`) should report `healthy` or `running`.
-
-Check backend health check endpoint:
-```bash
-curl http://localhost:8000/health
-```
-Expected response:
-```json
-{
-  "status": "ok",
-  "service": "pashu-sentinel-api",
-  "version": "2.0.0",
-  "database": "postgresql",
-  "ml_engine": {
-    "isolation_forest": true,
-    "ewma_farrington": true
-  }
-}
-```
-
----
-
-## Production Security & Best Practices
-
-1. **Non-Root Execution**: The backend container runs under `appuser` (UID 1000) with restricted system privileges.
-2. **Reverse Proxy SSL Termination**: When hosting publicly, place Cloudflare or Caddy in front of Nginx:
-   ```caddy
-   pashusentinel.gov.in {
-       reverse_proxy localhost:80
-   }
-   api.pashusentinel.gov.in {
-       reverse_proxy localhost:8000
-   }
-   ```
-3. **Database Backups**:
-   Schedule daily compressed PostGIS dumps via cron:
+1. **Clone the repository**:
    ```bash
-   0 3 * * * docker exec pashu_prod_postgis pg_dump -U pashu pashu_sentinel | gzip > /backups/pashu_$(date +%F).sql.gz
+   git clone https://github.com/akt1410/PashuSentinel.git
+   cd PashuSentinel
    ```
-4. **PWA Offline Resilience**: The frontend automatically caches static assets, Leaflet map tiles, and offline report mutations using IndexedDB + Dexie.js. No extra configuration required.
+
+2. **Configure Environment Variables** (optional — sensible defaults are provided):
+   ```bash
+   cat << 'ENV' > .env.prod
+   POSTGRES_DB=pashu_sentinel
+   POSTGRES_USER=pashu
+   POSTGRES_PASSWORD=pashu_secure_password
+   SECRET_KEY=9b7f92e0cbfae4210b37dc18d6a858e7c10b40a32e1858a8a47bfb3cb4ee08e6
+   GROQ_API_KEY=
+   CORS_ORIGINS=http://localhost,http://localhost:80
+   VITE_API_URL=http://localhost:8000
+   ENV
+   ```
+
+3. **Build & Start Services**:
+   ```bash
+   docker compose -f docker-compose.prod.yml up -d --build
+   ```
+
+4. **Verify Container Health**:
+   ```bash
+   docker compose -f docker-compose.prod.yml ps
+   ```
+
+   All 3 services will report healthy:
+   - **Frontend**: `http://localhost:80`
+   - **Backend API**: `http://localhost:8000`
+   - **API Docs (Swagger)**: `http://localhost:8000/docs`
+   - **Health Endpoint**: `http://localhost:8000/health`
+
+### Service Management
+- **View logs**: `docker compose -f docker-compose.prod.yml logs -f`
+- **Stop services**: `docker compose -f docker-compose.prod.yml down`
+- **Stop & wipe volumes**: `docker compose -f docker-compose.prod.yml down -v`
+
+---
+
+## 🔒 Security Best Practices
+- **Non-Root Execution**: Backend containers run under unprivileged user `appuser` (UID 1000).
+- **Graceful DB Fallback**: Backend automatically connects to PostgreSQL/PostGIS in production, and falls back to SQLite for single-file local execution.

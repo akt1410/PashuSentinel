@@ -143,7 +143,7 @@ export default function Home() {
           }}
         >
           <img
-            src="/psentinel.png"
+            src={`${import.meta.env.BASE_URL}psentinel.png`}
             alt="Pashu Sentinel Logo"
             className="w-full h-full object-contain rounded-xl"
           />

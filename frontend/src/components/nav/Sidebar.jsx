@@ -64,7 +64,7 @@ export default function Sidebar({ isOnline }) {
         style={{ borderBottom: '1px solid rgba(222,216,207,0.6)' }}
       >
         <img
-          src="/psentinel.png"
+          src={`${import.meta.env.BASE_URL}psentinel.png`}
           alt="Pashu Sentinel"
           className="w-9 h-9 object-contain shrink-0 rounded-xl shadow-sm"
         />

@@ -2,6 +2,8 @@
 
 ### Real-Time, Offline-First Livestock Disease Surveillance, Early-Warning & Veterinary Decision Support Platform
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-akt1410.github.io-2ea44f.svg?style=for-the-badge&logo=githubpages&logoColor=white)](https://akt1410.github.io/PashuSentinel/)
+
 [![Smart India Hackathon 2026](https://img.shields.io/badge/Smart%20India%20Hackathon-2026-orange.svg)](https://sih.gov.in)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![React](https://img.shields.io/badge/React-19.0-61DAFB.svg?logo=react&logoColor=black)](https://react.dev)
@@ -10,6 +12,7 @@
 [![PWA](https://img.shields.io/badge/PWA-Offline--First-5A0FC8.svg?logo=pwa&logoColor=white)](https://web.dev/progressive-web-apps/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
+> 🌐 **Live Web Application**: [https://akt1410.github.io/PashuSentinel/](https://akt1410.github.io/PashuSentinel/)  
 > **Problem Statement ID: 26128** | **Category**: Software (MedTech / HealthTech / One-Health)  
 > **Target Department**: Department of Animal Husbandry and Dairying (DAHD) & Maharashtra State Innovation Society
 
@@ -169,9 +172,16 @@ python scripts/benchmark_engine.py
 
 ---
 
-## 🐳 Docker Deployment
+## 🚀 Deployment & Access
 
-Run the entire production stack (PostGIS + FastAPI Backend + Nginx Frontend) in one command:
+### 1. Live Web Application (Zero Setup)
+The frontend PWA is live in production at:  
+👉 **[https://akt1410.github.io/PashuSentinel/](https://akt1410.github.io/PashuSentinel/)**
+
+Runs 100% in-browser with offline IndexedDB store, simulated outbreak clusters, and 1-click persona logins (`Sunita - Farmer`, `Dr. Deshmukh - Vet`, `Dr. Shinde - DVO`).
+
+### 2. Full-Stack Container (Docker Compose)
+Run the complete production stack (PostGIS + FastAPI Backend + Nginx Frontend) in one command:
 
 ```bash
 docker compose -f docker-compose.prod.yml up -d
@@ -179,16 +189,9 @@ docker compose -f docker-compose.prod.yml up -d
 
 - **Frontend**: `http://localhost:80`
 - **Backend API**: `http://localhost:8000/docs`
-- **PostGIS Database**: `localhost:5433`
+- **Health Check**: `http://localhost:8000/health`
 
----
-
-## 🌐 Cloud Deployment (Free Tier)
-
-Detailed step-by-step instructions available in **[DEPLOYMENT.md](DEPLOYMENT.md)**:
-1. **Frontend**: Deploy to **Vercel** with one click using `vercel.json`. Set `VITE_API_URL` to your backend URL.
-2. **Backend**: Deploy to **Render** or **Railway** using `Procfile` / `backend/Dockerfile`.
-3. **Database**: Free cloud PostgreSQL + PostGIS via **Supabase**.
+For complete deployment specifications, see **[DEPLOYMENT.md](DEPLOYMENT.md)**.
 
 ---
 

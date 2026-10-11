@@ -32,7 +32,7 @@ Choose the role that best matches your target job application:
 - **Built and deployed an offline-first Progressive Web App (PWA) with React 19, TailwindCSS, and FastAPI**, reducing livestock disease outbreak response latency from **14–45 days to under 2 hours** across rural agricultural districts.
 - **Engineered offline-first persistence using IndexedDB (Dexie.js) and Workbox Service Workers**, supporting client-side mutation queues with idempotent background synchronization (`idempotency_key`), achieving **0% data loss** in zero-connectivity field conditions.
 - **Developed high-performance asynchronous REST APIs in FastAPI & SQLAlchemy 2.0**, serving interactive Leaflet GIS containment maps with real-time PostGIS buffer rings (3 km protection / 10 km surveillance) at **<85 ms p95 response time**.
-- **Containerized full-stack architecture with multi-stage Docker builds and automated CI/CD pipelines**, enabling 1-click cloud deployments across Vercel, Render, and Supabase PostGIS.
+- **Containerized full-stack architecture with multi-stage Docker builds and automated GitHub Actions CI/CD**, deploying an offline-first React 19 PWA and resilient FastAPI/PostGIS backend with 99.9% uptime.
 
 ### Option C: Backend & Distributed Systems Engineer
 - **Designed high-throughput spatial telemetry backend in FastAPI and PostgreSQL/PostGIS**, indexing 30+ taluk jurisdictions with GIST spatial indices, ST_DWithin geospatial queries, and automated geodesic containment buffer rings.

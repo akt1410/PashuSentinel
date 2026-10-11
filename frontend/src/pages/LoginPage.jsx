@@ -185,7 +185,7 @@ export default function LoginPage() {
             background: 'rgba(255,255,255,0.08)', borderRadius: '1.125rem',
             border: '1px solid rgba(255,255,255,0.18)', backdropFilter: 'blur(12px)',
           }}>
-            <img src="/psentinel.png" alt="Pashu Sentinel" style={{ width: '2.75rem', height: '2.75rem', objectFit: 'contain', borderRadius: '0.5rem' }} />
+            <img src={`${import.meta.env.BASE_URL}psentinel.png`} alt="Pashu Sentinel" style={{ width: '2.75rem', height: '2.75rem', objectFit: 'contain', borderRadius: '0.5rem' }} />
           </div>
           <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: '1.5rem', fontWeight: 800, color: '#fff', letterSpacing: '-0.03em', margin: 0 }}>
             PASHU SENTINEL
